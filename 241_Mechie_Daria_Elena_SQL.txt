@@ -1,0 +1,1012 @@
+--cream tabelele din diagrama conceptuala
+
+create table COMPANII
+(id_companie number(4) CONSTRAINT companii_pk PRIMARY KEY,
+nume varchar2(30) NOT NULL);
+
+create table TRENURI
+(id_tren number(4) CONSTRAINT trenuri_pk PRIMARY KEY,
+model varchar2(30) NOT NULL,
+id_companie number(4) NOT NULL,
+capacitate number(3),
+viteza_calatorie number(4));
+
+create table GARI
+(id_gara varchar2(3) CONSTRAINT gari_pk PRIMARY KEY,
+cod_postal varchar2(6) NOT NULL,
+nume varchar2(55) NOT NULL,
+adresa varchar2(50),
+telefon varchar2(10));
+
+create table SOFERI
+(id_sofer number(4) CONSTRAINT soferi_pk PRIMARY KEY,
+id_gara varchar2(3),
+nume varchar2(30) NOT NULL,
+prenume varchar2(30),
+telefon varchar2(10) NOT NULL,
+data_angajare date DEFAULT sysdate,
+salariu number(6),
+CONSTRAINT soferi_gara_fk FOREIGN KEY(id_gara)
+REFERENCES GARI(id_gara));
+
+create table REGIUNI
+(id_regiune varchar2(3) CONSTRAINT regiuni_pk PRIMARY KEY,
+nume varchar2(15) NOT NULL,
+numar_gari number(2));
+
+create table ORAS
+(cod_postal varchar2(6) CONSTRAINT oras_pk PRIMARY KEY,
+nume varchar2(15) NOT NULL,
+id_gara varchar2(3),
+id_regiune varchar2(3));
+
+create table SEFI_DE_TREN
+(id_sef_tren number(4) CONSTRAINT sef_tren_pk PRIMARY KEY,
+id_gara varchar2(3),
+nume varchar2(30) NOT NULL,
+prenume varchar2(30),
+telefon varchar2(10) NOT NULL,
+data_angajare date DEFAULT sysdate,
+salariu number(6),
+CONSTRAINT sef_tren_gara_fk FOREIGN KEY(id_gara)
+REFERENCES GARI(id_gara));
+
+create table CLASE
+(id_clasa number(2) CONSTRAINT clase_pk PRIMARY KEY,
+nume varchar2(20) NOT NULL,
+pret number(4),
+facilitati varchar2(60));
+
+CREATE TABLE CALATORI
+(id_calator number(6) CONSTRAINT calatori_pk PRIMARY KEY,
+nume varchar2(30) NOT NULL,
+prenume varchar2(30),
+email varchar2(30),
+telefon varchar2(10) NOT NULL,
+data_nasterii date);
+
+CREATE TABLE CALATORII
+(id_calatorie number(6) CONSTRAINT calatorii_pk PRIMARY KEY,
+id_plecare_gara varchar2(3) NOT NULL,
+id_sosire_gara varchar2(3) NOT NULL,
+id_sofer1 number(4) NOT NULL,
+id_sofer2 number(4) NOT NULL,
+id_tren number(4) NOT NULL,
+data_plecare date,
+data_sosire date,
+CONSTRAINT calatorii_gara_fk1 FOREIGN KEY(id_plecare_gara)
+REFERENCES GARI(id_gara),
+CONSTRAINT calatorii_gara_fk2 FOREIGN KEY(id_sosire_gara)
+REFERENCES GARI(id_gara),
+CONSTRAINT calatorii_soferi_fk1 FOREIGN KEY(id_sofer1)
+REFERENCES SOFERI(id_sofer),
+CONSTRAINT calatorii_soferi_fk2 FOREIGN KEY(id_sofer2)
+REFERENCES SOFERI(id_sofer),
+CONSTRAINT valid_data_sosire CHECK(data_sosire > data_plecare),
+CONSTRAINT distinct_gara CHECK (id_plecare_gara != id_sosire_gara),
+CONSTRAINT distinct_sofer CHECK (id_sofer1 != id_sofer2)
+);
+
+--dupa ce am creat tabelul ORASE, marcam cheia externa in GARI
+ALTER TABLE GARI
+ADD CONSTRAINT gari_orase_fk FOREIGN KEY(cod_postal)
+REFERENCES ORAS(cod_postal);
+
+
+--odata creat tabelul TRENURI , marcam cheia externa in CALATORII
+ALTER TABLE CALATORII
+ADD CONSTRAINT calatorii_trenuri_fk FOREIGN KEY(id_tren)
+REFERENCES TRENURI(id_tren);
+
+
+--odata creat tabelul TRENURI , marcam cheia externa din CALATORII in TRENURI
+
+ALTER TABLE TRENURI
+ADD CONSTRAINT trenuri_companii_fk FOREIGN KEY(id_companie)
+REFERENCES COMPANII(id_companie);
+
+CREATE TABLE TRENURI_AU_CLASE
+(id_clasa number(2),
+id_tren number(4),
+capacitate number(3),
+CONSTRAINT trenuri_au_clase_clase_fk FOREIGN KEY(id_clasa)
+REFERENCES CLASE(id_clasa),
+CONSTRAINT trenuri_au_clase_trenuri_fk FOREIGN KEY(id_tren)
+REFERENCES TRENURI(id_tren),
+CONSTRAINT trenuri_au_clase_pk PRIMARY KEY(id_clasa, id_tren));
+
+CREATE TABLE REZERVA
+(id_clasa number(2),
+id_calatorie number(6),
+id_calator number(6),
+id_rezervare number(8),
+pret_bilet number(4),
+CONSTRAINT rezerva_clase_fk FOREIGN KEY(id_clasa)
+REFERENCES CLASE(id_clasa),
+CONSTRAINT rezerva_calatorii_fk FOREIGN KEY(id_calatorie)
+REFERENCES CALATORII(id_calatorie),
+CONSTRAINT rezerva_calatori_fk FOREIGN KEY(id_calator)
+REFERENCES CALATORI(id_calator),
+CONSTRAINT rezerva_pk PRIMARY KEY(id_clasa, id_calatorie, id_calator, id_rezervare));
+--primary key in REZERVA
+
+CREATE TABLE INSOTESC
+(id_sef_tren number(4),
+id_calatorie number(6),
+CONSTRAINT insotesc_sef_tren_fk1 FOREIGN KEY(id_sef_tren)
+REFERENCES SEFI_DE_TREN(id_sef_tren),
+CONSTRAINT insotesc_calatorii_fk FOREIGN KEY(id_calatorie)
+REFERENCES CALATORII(id_calatorie),
+CONSTRAINT insotesc_pk PRIMARY KEY(id_sef_tren, id_calatorie));
+
+
+-------
+
+INSERT INTO REGIUNI
+VALUES ('MUN', 'Muntenia', 1);
+
+INSERT INTO REGIUNI
+VALUES ('TRA', 'Transilvania', 2);
+
+INSERT INTO REGIUNI
+VALUES ('MOL', 'Moldova', 1);
+
+INSERT INTO REGIUNI
+VALUES ('DOB', 'Dobrogea', 1);
+
+INSERT INTO REGIUNI
+VALUES ('BAN', 'Banat', 1);
+
+INSERT INTO REGIUNI
+VALUES ('OLT', 'Oltenia', 1);
+
+INSERT INTO REGIUNI
+VALUES ('CRI', 'Crisana', 1);
+
+INSERT INTO REGIUNI
+VALUES ('MAR', 'Maramures', 0);
+
+select * from REGIUNI;
+
+
+
+
+INSERT INTO ORAS
+VALUES (010856, 'Bucuresti', 'BUC', 'MUN');
+
+INSERT INTO ORAS
+VALUES (500009, 'Brasov', 'BRV', 'TRA');
+
+INSERT INTO ORAS
+VALUES (700028, 'Iasi', 'IAS', 'MOL');
+
+INSERT INTO ORAS
+VALUES (900001, 'Constanta', 'CND', 'DOB');
+
+INSERT INTO ORAS
+VALUES (300013, 'Timisoara', 'TIM', 'BAN');
+
+INSERT INTO ORAS
+VALUES (310010, 'Arad', 'ARD', 'CRI');
+
+INSERT INTO ORAS
+VALUES (210235, 'Targu-Jiu', 'TGJ', 'OLT');
+
+INSERT INTO ORAS
+VALUES (331005, 'Hunedoara', 'HND', 'TRA');
+
+INSERT INTO ORAS
+VALUES (110001, 'Pitesti', NULL, 'MUN');
+
+INSERT INTO ORAS
+VALUES (530002, 'Miercurea-Ciuc', NULL, 'TRA');
+
+select * from ORAS;
+
+
+
+
+INSERT INTO GARI
+VALUES('BUC', 010856, 'Gara de Nord Bucuresti', 'Strada Garii de Nord', '0353621448');
+
+INSERT INTO GARI
+VALUES('BRV', 500009, 'Gara din Brasov', 'Strada Mihai Eminescu 1-3', '0253698112');
+
+INSERT INTO GARI
+VALUES('IAS', 700028, 'Gara de la Iasi', 'Strada Andrei Neagu 67-69', '0252641203');
+
+INSERT INTO GARI
+VALUES('CND', 900001, 'Lucian Blaga train station', 'Strada Ovazului Dulce 15', '0247156893');
+
+INSERT INTO GARI
+VALUES('TIM', 300013, 'Aurel Vlaicu gara de sud', 'Strada Apusului 78', '0241587320');
+
+INSERT INTO GARI
+VALUES('ARD', 310010, 'Arad Gara Vest', 'Calea Popicelor Vesele', '0234567891');
+
+INSERT INTO GARI
+VALUES('TGJ', 210235, 'Gara din GORJ', 'Strada Republicii 27', '0764474671');
+
+INSERT INTO GARI
+VALUES('HND', 331005, 'Hunedoara train ', 'Soseaua Floare Albastra 16-22', '0798654175');
+
+select * from GARI;
+
+
+
+ALTER TABLE ORAS
+ADD CONSTRAINT orase_regiuni_fk FOREIGN KEY(id_regiune)
+REFERENCES REGIUNI(id_regiune);
+
+ALTER TABLE ORAS
+ADD CONSTRAINT orase_gari_fk FOREIGN KEY(id_gara)
+REFERENCES GARI(id_gara);
+
+
+select * from oras;
+
+
+--- din proiectl trecut trebuia create secvente pentru inserarea inregistrarilor in tabele
+
+CREATE SEQUENCE SEQ_SOFERI
+INCREMENT by 10
+START WITH 120
+MAXVALUE 9990
+NOCYCLE;
+
+CREATE SEQUENCE SEQ_SEFI_DE_TREN
+INCREMENT by 10
+START WITH 10
+MAXVALUE 9990
+NOCYCLE;
+
+CREATE SEQUENCE SEQ_CALATORI
+INCREMENT by 1
+START WITH 1
+MAXVALUE 999999
+NOCYCLE;
+
+CREATE SEQUENCE SEQ_CALATORII
+INCREMENT by 1
+START WITH 1001
+MAXVALUE 999999
+NOCYCLE;
+
+
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'BUC', 'Andreescu', 'Andrei', '0765448912', to_date('01-06-2017','DD-MM-YYYY'), 102300);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'BUC', 'Diaconu', 'Alex', '0746158799', to_date('20-08-2018','DD-MM-YYYY'), 140340);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'TIM', 'Popovici', 'Maria', '0713665284', to_date('27-02-2017','DD-MM-YYYY'), 600000);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'TIM', 'Haiduc', 'Luiza', '0771205664', to_date('16-09-2020','DD-MM-YYYY'), 308600);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'BRV', 'Adrianescu', 'David', '0786221540', to_date('30-11-2011','DD-MM-YYYY'), 401030);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'BRV', 'Minici', 'Marian', '0756332014', to_date('13-10-2015','DD-MM-YYYY'), 387510);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'BRV', 'Popescu', 'Razvan', '0253661479', to_date('30-05-2021','DD-MM-YYYY'), 275500);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'IAS', 'Cristescu', 'Iosif', '0714630175', to_date('21-02-2019','DD-MM-YYYY'), 250789);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'IAS', 'Mirea', 'Antonia', '0711247965', to_date('01-01-2015','DD-MM-YYYY'), 650990);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'CND', 'Paun', 'Robert', '0741226985', to_date('03-11-2019','DD-MM-YYYY'), 372999);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'CND', 'Aulescu', 'Matei', '0753210559', to_date('01-04-2022','DD-MM-YYYY'), 35000);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'CND', 'Aristid', 'Mihaela', '077232146', to_date('12-08-2021','DD-MM-YYYY'), 99999);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'TGJ', 'Ghita', 'Cosmin', '0792578600', to_date('21-07-2016','DD-MM-YYYY'), 500000);
+
+INSERT INTO SOFERI
+VALUES (SEQ_SOFERI.NEXTVAL, 'TGJ', 'Bonescu', 'Vlad', '0353621004', to_date('13-05-2011','DD-MM-YYYY'), 450770);
+
+select * from SOFERI;
+
+
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'BUC', 'Ionescu', 'Gabriela', '0745669823', to_date('20-12-2009','DD-MM-YYYY'), 80000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'BUC', 'Marinescu', 'Stefania', '0703126445', to_date('30-08-2013','DD-MM-YYYY'), 80000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'BUC', 'Usurelu', 'Horia', '0723665801', to_date('29-02-2018','DD-MM-YYYY'), 60000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'BRV', 'Raducanu', 'Mihnea', '0765231002', to_date('23-05-2019','DD-MM-YYYY'), 80500);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'BRV', 'Avramescu', 'Antonela', '0713247889', to_date('24-02-2022','DD-MM-YYYY'), 15000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'TIM', 'Danaricu', 'Radu', '0465322102', to_date('13-05-2019','DD-MM-YYYY'), 17000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'TIM', 'Enescu', 'Florentiu', '0253620112', to_date('30-12-2014','DD-MM-YYYY'), 90000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'IAS', 'Nedelcu', 'Aleandru', '0788654123', to_date('28-06-2020','DD-MM-YYYY'), 12000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'IAS', 'Stoian', 'Traianis', '0735662147', to_date('07-07-2017','DD-MM-YYYY'), 3500);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'CND', 'Lemnaru', 'Anaisa', '0741223569', to_date('11-12-2020','DD-MM-YYYY'), 33999);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'CND', 'Cotiga', 'Camelia', '0700005925', to_date('10-10-2011','DD-MM-YYYY'), 85000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'TGJ', 'Mechie', 'LEONARD', '0768320556', to_date('16-10-2009','DD-MM-YYYY'), 42000);
+
+INSERT INTO SEFI_DE_TREN
+VALUES (SEQ_SEFI_DE_TREN.NEXTVAL, 'HND', 'Vilceanu', 'Dragos', '0748326995', to_date('12-12-2012','DD-MM-YYYY'), 76000);
+
+select * from SEFI_DE_TREN;
+
+
+
+
+INSERT INTO COMPANII
+VALUES (120, 'Softrans');
+
+INSERT INTO COMPANII
+VALUES (121, 'Regio Calatori');
+
+INSERT INTO COMPANII
+VALUES (122, 'Astra Trans Carpatic');
+
+INSERT INTO COMPANII
+VALUES (123, 'CFR');
+
+INSERT INTO COMPANII
+VALUES (124, 'Interrail');
+
+INSERT INTO COMPANII
+VALUES (125, 'InterRegional');
+
+select * from COMPANII;
+
+
+
+
+
+INSERT INTO TRENURI
+VALUES (1000, 'ROCO_HO 2000', 120, 139, 200);
+
+INSERT INTO TRENURI
+VALUES (1001, 'MARKLIN-HO 123', 120, 150, 150);
+
+INSERT INTO TRENURI
+VALUES (1002, 'MARKLIN-HO 125', 120, 200, 130);
+
+INSERT INTO TRENURI
+VALUES (1003, 'ACME-HO 67', 120, 100, 175);
+
+INSERT INTO TRENURI
+VALUES (1004, 'MARKLIN-HO 127', 121, 150, 155);
+
+INSERT INTO TRENURI
+VALUES (1005, 'ACME-HO 68', 121, 137, 200);
+
+INSERT INTO TRENURI
+VALUES (1006, 'LIMA-HO 45', 121, 190, 190);
+
+INSERT INTO TRENURI
+VALUES (1007, 'LIMA-HO 46', 122, 191, 195);
+
+INSERT INTO TRENURI
+VALUES (1008, 'ROCO-HO 1200', 122, 241, 170);
+
+INSERT INTO TRENURI
+VALUES (1009, 'PIKO-HO 556', 123, 191, 200);
+
+INSERT INTO TRENURI
+VALUES (1010, 'PIKO-HO 600', 124, 180, 220);
+
+SELECT * FROM TRENURI;
+
+
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BUC', 'BRV', 130, 140, 1006, to_date('11-12-2021 07:00','DD-MM-YYYY HH24:MI'), to_date('11-12-2021 07:55','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BUC', 'IAS', 130, 140, 1002, to_date('24-12-2021 09:00','DD-MM-YYYY HH24:MI'), to_date('24-12-2021 10:05','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BUC', 'TIM', 130, 140, 1000, to_date('25-12-2021 12:00','DD-MM-YYYY HH24:MI'), to_date('25-12-2021 13:00','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BUC', 'TIM', 130, 140, 1010, to_date('01-01-2022 21:30','DD-MM-YYYY HH24:MI'), to_date('01-01-2022 22:30','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BRV', 'IAS', 130, 140, 1003, to_date('02-01-2022 16:00','DD-MM-YYYY HH24:MI'), to_date('02-01-2022 16:55','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BRV', 'CND', 150, 160, 1008, to_date('02-01-2022 23:55','DD-MM-YYYY HH24:MI'), to_date('03-01-2022 00:30','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'IAS', 'TGJ', 130, 140, 1009, to_date('04-01-2022 13:00','DD-MM-YYYY HH24:MI'), to_date('04-01-2022 14:10','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'IAS', 'BUC', 120, 130, 1002, to_date('05-01-2022 05:30','DD-MM-YYYY HH24:MI'), to_date('05-01-2022 06:40','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'TGJ', 'IAS', 150, 160, 1004, to_date('20-03-2022 19:30','DD-MM-YYYY HH24:MI'), to_date('20-03-2022 20:40','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'TGJ', 'BRV', 150, 160, 1001, to_date('22-03-2022 09:45','DD-MM-YYYY HH24:MI'), to_date('22-03-2022 10:45','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'TIM', 'BUC', 150, 160, 1005, to_date('30-03-2022 07:40','DD-MM-YYYY HH24:MI'), to_date('30-03-2022 08:55','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'TIM', 'CND', 150, 160, 1007, to_date('05-04-2022 12:00','DD-MM-YYYY HH24:MI'), to_date('05-04-2022 13:45','DD-MM-YYYY HH24:MI'));
+
+INSERT INTO CALATORII
+VALUES (SEQ_CALATORII.NEXTVAL, 'BUC', 'ARD', 130, 140, 1003, to_date('11-06-2022 05:55','DD-MM-YYYY HH24:MI'), to_date('11-06-2022 07:20','DD-MM-YYYY HH24:MI'));
+
+SELECT * FROM CALATORII;
+
+
+
+INSERT INTO CLASE
+VALUES (01, 'Economica', NULL , 'masuta retractabila');
+
+INSERT INTO CLASE
+VALUES (20, 'Business', 100, 'scaune ajustabile si masuta rabatabila');
+
+INSERT INTO CLASE
+VALUES (30, 'Cuseta', 200, 'paturi');
+
+INSERT INTO CLASE
+VALUES (40, 'Business+', 300, 'business + pachetel');
+
+INSERT INTO CLASE
+VALUES (50, 'Clasa intai', 1000, 'clasa intai + pachetel');
+
+
+select * from CLASE;
+
+
+
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Peptan', 'Vlad', 'vladp@yahoo.com', '0758723669', to_date('13-05-2002','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Paraschiv', 'Ioana', 'pioana@gmail.com', '0789654112', to_date('20-06-1975','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Caraiman', 'Andrei', 'andreic@yahoo.com.com', '0741023558', to_date('05-02-1992','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Foanene', 'Bogdan', 'bogdif@yahoo.com', '0741203569', to_date('10-11-2001','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Antonescu', 'Luca', 'lucaa@yahoo.com', '0712365478', to_date('21-08-2000','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Brenciu', 'Tudor', 'tbre@yahoo.com', '0756223001', to_date('14-03-1984','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Girbaciu', 'Iani', 'ianig@yahoo.com', '0789445123', to_date('14-07-1995','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Buju', 'David', 'bujud@gmail.com', '0712345614', to_date('22-01-2003','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Popica', 'Luana', 'popilu@gmail.com', '0745661230', to_date('27-08-2011','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Bilgar', 'Bianca', 'bibib@yahoo.com', '0741220365', to_date('10-12-1994','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Popeanga', 'Mariuta', 'popim@yahoo.com', '0746552398', to_date('12-08-1980','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Gheorghidiu', 'Stefan', 'stefi.g@yahoo.com', '0788895412', to_date('03-03-1971','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Boboc', 'Geanina', 'geani@yahoo.com', '0721330256', to_date('18-11-2000','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Constantinescu', 'Mircea', 'ctm.c@yahoo.com', '0456852013', to_date('28-06-1974','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Mursoi', 'Maria', 'marim@gmail.com', '0145698745', to_date('10-11-2001','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Andreescu', 'Miruna', 'a.miru@yahoo.com', '0023478965', to_date('12-01-1972','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Tiberiu', 'Andra', 'tibi.a@yahoo.com', '0321559864', to_date('22-01-1995','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Stoenescu', 'Andreea', 'stoea@gmail.com', '0123654781', to_date('21-09-1977','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Broscoteanu', 'Elena', 'brelena@gmail.com', '0123547896', to_date('31-12-1973','dd-mm-yyyy'));
+
+INSERT INTO CALATORI
+VALUES (SEQ_CALATORI.NEXTVAL, 'Rusu', 'Cristian', 'cristianrusuD@gmail.com', '0740332698', to_date('14-01-1963','dd-mm-yyyy'));
+
+select * from CALATORI;
+
+
+
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (30, 1000, 100);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (20, 1000, 49);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (40, 1001, 141);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (20, 1004, 61);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (20, 1006, 40);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (30, 1009, 49);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (20, 1007, 26);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (20, 1008, 100);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (30, 1008, 20);
+
+INSERT INTO TRENURI_AU_CLASE
+VALUES (40, 1008, 10);
+
+select * from TRENURI_AU_CLASE;
+select * from trenuri;
+
+
+
+INSERT INTO REZERVA
+VALUES (30, 1001, 1, 100001, 300);
+
+INSERT INTO REZERVA
+VALUES (20, 1007, 8, 100004, 200);
+
+INSERT INTO REZERVA
+VALUES (40, 1002, 5, 100008, 250);
+
+INSERT INTO REZERVA
+VALUES (40, 1006, 6, 100009, 250);
+
+INSERT INTO REZERVA
+VALUES (20, 1011, 8, 100005, 200);
+
+INSERT INTO REZERVA
+VALUES (30, 1003, 2, 100012, 300);
+
+INSERT INTO REZERVA
+VALUES (30, 1004, 3, 100013, 300);
+
+INSERT INTO REZERVA
+VALUES (40, 1011, 10, 100014, 250);
+
+INSERT INTO REZERVA
+VALUES (20, 1009, 7, 100015, 200);
+
+INSERT INTO REZERVA
+VALUES (20, 1005, 9, 100016, 200);
+
+
+select * from REZERVA;
+
+
+
+INSERT INTO INSOTESC
+VALUES (10, 1001);
+
+INSERT INTO INSOTESC
+VALUES (20, 1001);
+
+INSERT INTO INSOTESC
+VALUES (10, 1003);
+
+INSERT INTO INSOTESC
+VALUES (10, 1004);
+
+INSERT INTO INSOTESC
+VALUES (50, 1006);
+
+INSERT INTO INSOTESC
+VALUES (80, 1007);
+
+INSERT INTO INSOTESC
+VALUES (90, 1007);
+
+INSERT INTO INSOTESC
+VALUES (100, 1011);
+
+INSERT INTO INSOTESC
+VALUES (60, 1011);
+
+INSERT INTO INSOTESC
+VALUES (70, 1011);
+
+
+select * from INSOTESC;
+
+commit;
+
+
+
+
+ex6)
+
+-- Pentru fiecare gara sa se afiseze numele acesteia si salariul mediu al soferilor ce lucreaza acolo
+
+/
+CREATE OR REPLACE PROCEDURE ex6 IS
+
+-- Vom crea un tip de date inregistrare pentru a pastra
+-- codul garii, numele acesteia si salariul mediu
+
+    TYPE gari_record IS RECORD
+    (cod gari.id_gara%TYPE,
+    nume gari.nume%TYPE,
+    salariu_mediu soferi.salariu%TYPE);
+
+-- Datele pentru toate garile vor fi salvate intr-un tablou imbricat ce contine o coloana de tip inregistrare creat mai sus
+
+    TYPE tablou_imbricat IS TABLE OF gari_record;
+    
+-- Vom folosi un vector pentru salvarea si calcularea fiecarui salariu mediu al soferilor in functie de gara
+
+    TYPE vector IS VARRAY(8) OF soferi.salariu%TYPE;
+    
+-- Cu ajutorul unui ciclu cursor vom parcurge toate codurile de gari
+
+    CURSOR c IS
+        SELECT id_gara
+        FROM gari;
+    
+    t tablou_imbricat := tablou_imbricat();
+    r gari_record;
+    v vector := vector();
+BEGIN
+    
+    FOR i IN c LOOP
+    
+-- Initial vom salva codul si numele garilor in variabila de tip inregistrare declarata mai sus
+
+        SELECT id_gara, nume
+        INTO r.cod, r.nume
+        FROM gari
+        WHERE i.id_gara = id_gara;
+
+-- Calculam salariul mediu in functie de gara si il salvam intr-un element din vector
+
+        v.EXTEND;
+        
+        SELECT AVG(salariu)
+        INTO v(v.LAST)
+        FROM soferi
+        WHERE id_gara = i.id_gara;
+        
+-- Copiem valoarea salariului mediu in
+-- campul specific din variabila de tip inregistrare
+
+        r.salariu_mediu := v(v.LAST);
+        
+-- Adaugam variabila de tip inregistrare curenta in
+-- tabloul imbricat pentru a pastra toate valorile
+
+        t.EXTEND;
+        t(t.LAST) := r;
+        
+-- Afisam rezultatele in consola de output
+        DBMS_OUTPUT.PUT_LINE ('La gara ' || t(t.LAST).nume ||
+        ' salariul mediu al soferilor este de ' || t(t.last).salariu_mediu);
+    END LOOP;
+    
+END ex6;
+/
+
+execute ex6;
+
+
+
+
+
+
+
+ex7)
+
+--Sa se defineasca o procedura care primeste ca parametru numele unui sef de tren si 
+--returneaza calatoriile pe care le a condus plus calatorii care au participat pentru fiecare calatorie
+--(tipuri de cursor: cursor clasic, ciclu cursor) 
+
+
+
+CREATE OR REPLACE PROCEDURE sef_de_tren_insoteste
+        (nume_sef sefi_de_tren.NUME%TYPE,
+        prenume_sef sefi_de_tren.PRENUME%TYPE)
+    IS
+        salariu_sef sefi_de_tren.salariu%TYPE;
+        sef_id sefi_de_tren.id_sef_tren%TYPE;
+        calatorie_id calatorii.id_calatorie%TYPE;
+        calatorie_idd calatorii.id_calatorie%TYPE;
+        
+        CURSOR c_calatorii IS --CURSOR CLASIC PENTRU ID-URILE calatoriilor 
+            SELECT DISTINCT id_calatorie
+            FROM insotesc
+            WHERE id_sef_tren = (SELECT id_sef_tren
+                                FROM sefi_de_tren
+                                WHERE upper(nume)=upper(nume_sef) AND upper(prenume)=upper(prenume_sef) 
+                                );
+        
+        CURSOR c_calatori(calatorie_id_calatori calatorii.id_calatorie%TYPE) IS --CURSOR CICLU CU PARAMETRU PENTRU ID-UL calatoriei, CU calatorii ei 
+            SELECT nume
+            FROM calatori 
+            WHERE id_calator IN (SELECT id_calator
+                                    FROM rezerva
+                                    WHERE id_calatorie = calatorie_id_calatori
+                                    );
+    BEGIN
+        SELECT salariu 
+        INTO salariu_sef
+        FROM sefi_de_tren
+        WHERE upper(nume)=upper(nume_sef) AND upper(prenume)=upper(prenume_sef);
+       
+        DBMS_OUTPUT.PUT_LINE('Seful de tren ' || '(' || salariu_sef || ') ' || nume_sef || ' ' || prenume_sef || ' a insotit: ');
+        
+        OPEN c_calatorii; 
+        LOOP FETCH c_calatorii INTO calatorie_id; --se incarca id-urile calatoriilor pe rand
+        EXIT WHEN c_calatorii%NOTFOUND;
+
+            SELECT id_calatorie
+            INTO calatorie_idd
+            FROM calatorii
+            WHERE id_calatorie = calatorie_id;
+
+            DBMS_OUTPUT.PUT_LINE('Calatoria: ' || calatorie_idd || ' contine :');
+
+            FOR calator IN c_calatori(calatorie_id) LOOP --ciclu cursor pentru afisarea calatorilor
+                DBMS_OUTPUT.PUT_LINE('       ' || calator.nume);
+            END LOOP;
+        
+        END LOOP;
+        
+        --caz in care seful de tren nu a insotit nimic
+        IF c_calatorii%ROWCOUNT = 0 THEN 
+            DBMS_OUTPUT.PUT_LINE('Seful de tren nu a insotit nimic pana acum');
+        END IF;
+
+        CLOSE c_calatorii; --inchidere cursor
+        
+        EXCEPTION
+            WHEN TOO_MANY_ROWS THEN --cazul in care exista mai multi sefi de tren cu numele dat
+                RAISE_APPLICATION_ERROR(-20001, 'Exista mai multi sefi de tren cu acest nume');
+            WHEN NO_DATA_FOUND THEN --nu exista sef de tren cu numele dat
+                RAISE_APPLICATION_ERROR(-20000, 'Nu exista niciun sef de tren cu acest nume');
+    END sef_de_tren_insoteste;
+/
+select * from sefi_de_tren;
+select * from insotesc;
+execute sef_de_tren_insoteste('Ionescu', 'Gabriela');
+
+                -- Seful de tren (80000) Ionescu Gabriela a insotit: 
+                -- Calatoria: 1004 contine:
+                --        Caraiman
+                -- Calatoria: 1001 contine:
+                --        Peptan
+                -- Calatoria: 1003 contine:
+                --        Paraschiv
+
+execute sef_de_tren_insoteste('Mechie', 'LEONARD'); --Seful de tren nu a insotit nimic pana acum
+
+
+
+ex8)
+
+dupa citirea numelui unui calator sa se returneze pretul total al rezervarii facute de acesta (pretul biletului +
+pretul aditional pentru clasa, daca este cazul)
+
+-- In cazul in care un pasager are mai multe rezervari, se va returna suma tuturor preturilor totale
+
+/
+CREATE OR REPLACE FUNCTION ex8(nume_calator calatori.nume%TYPE)
+RETURN REZERVA.pret_bilet%TYPE IS
+
+    pret_total REZERVA.pret_bilet%TYPE;
+    nr NUMBER;
+BEGIN
+
+-- Numaram cati calatori exista cu numele dat ca parametru
+    SELECT COUNT(*) INTO nr
+    FROM calatori WHERE INITCAP(nume_calator) = INITCAP(nume);
+
+-- Tratam cazul in care nu exista niciun pasager si cazul in care exista mai multe pasageri cu acelasi nume
+    IF nr = 0
+    THEN RAISE_APPLICATION_ERROR(-20000, 'Nu exista niciun calator cu acest nume');
+    ELSIF nr > 1
+    THEN RAISE_APPLICATION_ERROR(-20001, 'Exista mai multi calatori cu acest nume');
+    END IF;
+    
+-- numaram cate rezervari exista pt calatorul dat
+
+    SELECT COUNT(*) INTO nr
+    FROM calatori RIGHT OUTER JOIN REZERVA USING (id_calator)
+    WHERE INITCAP(nume_calator) = INITCAP(nume);
+
+    IF nr = 0
+    THEN RAISE_APPLICATION_ERROR(-20002, 'Nu exista nicio rezervare pe acest nume');
+    END IF;
+
+-- Functia de SUM va trata cazul in care exista o singura rezervare si cazul in care exista mai multe
+    SELECT SUM(pret_bilet + NVL(pret, 0))
+    INTO pret_total
+    FROM REZERVA JOIN CLASE USING (id_clasa) JOIN calatori USING (id_calator)
+    WHERE INITCAP(nume_calator) = INITCAP(calatori.nume);
+    
+-- Sunt folosite 3 tabele pentru a accesa detalii despre pretul aditional al
+-- clasei, numele pasagerilor si pretul biletului trecut in rezervare
+    
+    RETURN pret_total;
+    
+END ex8;
+/
+
+select * from rezerva;
+select ex8('Buju') from dual;
+
+
+
+
+ex9
+
+ --Se da numele unui sofer ca parametru. Sa se afiseze numarul de calatorii la care acesta a participat, numele garii la care lucreaza si numele orasului si al regiunii in care se afla aeroportul
+
+select * from soferi;
+
+CREATE OR REPLACE PROCEDURE ex9 (nume_sofer soferi.nume%TYPE) IS
+
+    v_nr NUMBER(4);
+    v_gara gari.nume%TYPE;
+    v_oras oras.nume%TYPE;
+    v_regiune regiuni.nume%TYPE;
+    
+BEGIN
+    
+-- Vom folosi un RIGHT JOIN intre calatorii si soferi pentru  a include si soferii care nu au facut nicio calatorie dar apartin unei gari.
+-- Conditia de JOIN intre aceastea verifica daca soferul a fost fie soferul 1 fie soferul 2
+
+-- In continuare se face JOIN simplu cu tabelele GARI, ORAS si REGIUNI pentru a putea accesa si selecta numele acestora
+
+   SELECT COUNT(id_calatorie), g.nume, o.nume, r.nume
+    INTO v_nr, v_gara, v_oras, v_regiune
+    FROM CALATORII c RIGHT JOIN soferi s ON (s.id_sofer = c.id_sofer1 OR
+    s.id_sofer = c.id_sofer2) JOIN gari g ON (s.id_gara = g.id_gara)
+    JOIN ORAS o ON (o.id_gara = s.id_gara) JOIN REGIUNI r USING (id_regiune)
+    WHERE INITCAP(nume_sofer) = INITCAP(s.nume)
+    GROUP BY g.nume, o.nume, r.nume;
+
+
+-- Afisam in consola datele selectate mai sus
+    DBMS_OUTPUT.PUT_LINE('Nume sofer: ' || INITCAP(nume_sofer));
+    DBMS_OUTPUT.PUT_LINE('Numar de calatorii: ' || v_nr);
+    DBMS_OUTPUT.PUT_LINE('Numele garii: ' || v_gara);
+    DBMS_OUTPUT.PUT_LINE('Orasul garii in care lucreaza: ' || v_oras);
+    DBMS_OUTPUT.PUT_LINE('Regiunea in care se afla gara: ' || v_regiune);
+    
+EXCEPTION
+
+    WHEN TOO_MANY_ROWS
+    THEN RAISE_APPLICATION_ERROR(-20003, 'Exista mai multi soferi cu acest nume');
+    WHEN NO_DATA_FOUND
+    THEN RAISE_APPLICATION_ERROR(-20004, 'Nu exista soferi cu acest nume');
+    
+END ex9;
+/
+EXECUTE ex9('Diaconu');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ex10)trigger care interzice stergerea datelor din tabelul insotesc
+
+select * from insotesc;
+
+/
+CREATE OR REPLACE TRIGGER ex
+    BEFORE DELETE ON insotesc
+BEGIN
+    RAISE_APPLICATION_ERROR(-20005, 'Nu e posibila stergerea datelor din tabelul insotesc');
+END;
+/
+
+DELETE FROM insotesc
+WHERE id_calatorie = 1011;
+
+
+
+
+
+ex11)trigger care interzice cresterea pretului unui bilet cu mai mult de 50
+select * from rezerva;
+/
+CREATE OR REPLACE TRIGGER ex11
+    BEFORE UPDATE ON REZERVA
+    FOR EACH ROW
+BEGIN
+    IF(:NEW.pret_bilet - :OLD.pret_bilet > 50)
+    THEN RAISE_APPLICATION_ERROR(-20006, 'Pretul nu poate fi marit!');
+    END IF;
+END;
+/
+
+UPDATE REZERVA
+SET pret_bilet = pret_bilet + 52
+WHERE id_rezervare = 100016;
+
+
+
+
+
+
+
+
+ex12)trigger care afiseaza un mesaj de fiecare data cand este rulata o comanda LDD
+
+/
+CREATE OR REPLACE TRIGGER exc12
+    AFTER CREATE OR ALTER OR DROP ON SCHEMA
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('A FOST EFECTUATA O COMANDA LDD');
+END;
+/
+
+ALTER TABLE soferi
+ADD nr_copii NUMBER(2);
+
+select * from soferi;
+
+ALTER TABLE soferi
+DROP COLUMN nr_copii;
+
